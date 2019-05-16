@@ -17,10 +17,10 @@ type Redis struct {
 
 func New(c *Config) *Redis {
 	var option []redis.DialOption
-	option = append(option, redis.DialReadTimeout(c.ReadTimeout))
-	option = append(option, redis.DialWriteTimeout(c.WriteTimeout))
+	option = append(option, redis.DialReadTimeout(time.Duration(c.ReadTimeout)))
+	option = append(option, redis.DialWriteTimeout(time.Duration(c.WriteTimeout)))
 	option = append(option, redis.DialPassword(c.Auth))
-	option = append(option, redis.DialConnectTimeout(c.DialTimeout))
+	option = append(option, redis.DialConnectTimeout(time.Duration(c.DialTimeout)))
 
 	pool := &redis.Pool{
 		Dial: func() (conn redis.Conn, e error) {
@@ -32,7 +32,7 @@ func New(c *Config) *Redis {
 		},
 		MaxIdle:     c.Idle,
 		MaxActive:   c.Active,
-		IdleTimeout: c.IdleTimeout,
+		IdleTimeout: time.Duration(c.IdleTimeout),
 	}
 	return &Redis{pool: pool}
 }

@@ -7,9 +7,8 @@
 package redis
 
 import (
-	"time"
+	"github.com/freezeChen/studio-library/time"
 )
-
 
 type Config struct {
 	Addr         string

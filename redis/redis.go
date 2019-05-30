@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+const (
+	JSONFLAG = "json"
+)
+
 type Redis struct {
 	pool *redis.Pool
 }
@@ -39,4 +43,19 @@ func New(c *Config) *Redis {
 
 func (r *Redis) Get() redis.Conn {
 	return r.pool.Get()
+}
+
+//func (r *Redis) CacheGet(key string) (*Item, error) {
+//	if !legalKey(key) {
+//		return nil, ErrorKey
+//	}
+//
+//}
+
+func legalKey(key string) bool {
+	if len(key) == 0 {
+		return false
+	}
+
+	return true
 }

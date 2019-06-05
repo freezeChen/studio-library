@@ -42,7 +42,7 @@ func InitLogger(c *Config) {
 	if c.WriteKafka {
 		writeSync, err := initKafkaWriter(c)
 		if err != nil {
-			panic("Failed to connect kafka:"+err.Error())
+			panic("Failed to connect kafka:" + err.Error())
 		} else {
 			writers = append(writers, writeSync)
 		}
@@ -76,6 +76,47 @@ func InitLogger(c *Config) {
 
 }
 
+func Debug(msg string) {
+	defer gLogger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+	split := strings.Split(forPC.Name(), ".")
+
+	gLogger.WithOptions(zap.AddCallerSkip(1)).
+		Debug(
+			msg,
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
+func Debugf(format string, args ...interface{}) {
+	defer gLogger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+	split := strings.Split(forPC.Name(), ".")
+
+	gLogger.WithOptions(zap.AddCallerSkip(1)).
+		Debug(fmt.Sprintf(format, args...),
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
+func Info(msg string) {
+	defer gLogger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+	split := strings.Split(forPC.Name(), ".")
+
+	gLogger.WithOptions(zap.AddCallerSkip(1)).
+		Info(
+			msg,
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
 func Infof(format string, args ...interface{}) {
 	defer gLogger.Sync()
 	pc, _, _, _ := runtime.Caller(1)
@@ -84,6 +125,20 @@ func Infof(format string, args ...interface{}) {
 
 	gLogger.WithOptions(zap.AddCallerSkip(1)).
 		Info(fmt.Sprintf(format, args...),
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
+func Error(msg string) {
+	defer gLogger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+	split := strings.Split(forPC.Name(), ".")
+
+	gLogger.WithOptions(zap.AddCallerSkip(1)).
+		Error(
+			msg,
 			zap.String("class", split[len(split)-2]),
 			zap.String("method", split[len(split)-1]),
 		)

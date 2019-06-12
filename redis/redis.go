@@ -7,6 +7,8 @@
 package redis
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/garyburd/redigo/redis"
 	"time"
 )
@@ -45,12 +47,53 @@ func (r *Redis) Get() redis.Conn {
 	return r.pool.Get()
 }
 
-//func (r *Redis) CacheGet(key string) (*Item, error) {
-//	if !legalKey(key) {
-//		return nil, ErrorKey
-//	}
-//
-//}
+func (r *Redis) CacheGet(key string) (reply *Reply) {
+	reply = new(Reply)
+	if !legalKey(key) {
+		reply.err = errors.New("empty key")
+		return
+	}
+	conn := r.Get()
+	defer conn.Close()
+
+	reply2, err := redis.Bytes(conn.Do("GET", key))
+	reply.err = err
+	reply.item = new(Item)
+	reply.item.Value = reply2
+	return
+}
+
+func (r *Redis) CaCheSet(item *Item) (err error) {
+	if !legalKey(item.Key) {
+		return ErrKey
+	}
+
+	conn := r.Get()
+	defer conn.Close()
+
+	switch item.Object.(type) {
+	case interface{}:
+		item.Object, err = json.Marshal(item.Object)
+	}
+	if err != nil {
+		return
+	}
+
+	_, err = conn.Do("SETEX", item.Key, item.Object, item.Expiration)
+	return
+}
+
+func (r *Redis) Delete(key string) (err error) {
+	if !legalKey(key) {
+		err = errors.New("empty key")
+		return
+	}
+
+	conn := r.Get()
+	defer conn.Close()
+	_, err = conn.Do("DEL", key)
+	return
+}
 
 func legalKey(key string) bool {
 	if len(key) == 0 {

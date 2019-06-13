@@ -7,6 +7,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"github.com/garyburd/redigo/redis"
@@ -47,7 +48,7 @@ func (r *Redis) Get() redis.Conn {
 	return r.pool.Get()
 }
 
-func (r *Redis) CacheGet(key string) (reply *Reply) {
+func (r *Redis) CacheGet(ctx context.Context, key string) (reply *Reply) {
 	reply = new(Reply)
 	if !legalKey(key) {
 		reply.err = errors.New("empty key")
@@ -63,7 +64,7 @@ func (r *Redis) CacheGet(key string) (reply *Reply) {
 	return
 }
 
-func (r *Redis) CaCheSet(item *Item) (err error) {
+func (r *Redis) CaCheSet(ctx context.Context, item *Item) (err error) {
 	if !legalKey(item.Key) {
 		return ErrKey
 	}
@@ -71,19 +72,49 @@ func (r *Redis) CaCheSet(item *Item) (err error) {
 	conn := r.Get()
 	defer conn.Close()
 
-	switch item.Object.(type) {
-	case interface{}:
-		item.Object, err = json.Marshal(item.Object)
-	}
-	if err != nil {
+	if item.Value != nil {
+		_, err = conn.Do("SET", item.Key, item.Value, "EX", item.Expiration)
 		return
 	}
 
-	_, err = conn.Do("SETEX", item.Key, item.Object, item.Expiration)
+	var value string
+	switch item.Object.(type) {
+	case string:
+		value = item.Object.(string)
+	case []byte:
+		value = string(item.Object.([]byte))
+	case interface{}:
+		var b []byte
+		b, err = json.Marshal(item.Object)
+		value = string(b)
+		if err != nil {
+			return
+		}
+	}
+
+	_, err = conn.Do("SET", item.Key, value, "EX", item.Expiration)
 	return
 }
 
-func (r *Redis) Delete(key string) (err error) {
+func (r *Redis) CacheGetMulti(ctx context.Context, keys []string) (res *Replies, err error) {
+	conn := r.Get()
+	defer conn.Close()
+
+	res = new(Replies)
+	res.items = make(map[string]*Item, len(keys))
+	for _, v := range keys {
+		var b []byte
+		b, err = redis.Bytes(conn.Do("GET", v))
+		if err != nil {
+			return
+		}
+		res.items[v] = &Item{Key: v, Value: b}
+	}
+
+	return
+}
+
+func (r *Redis) Delete(ctx context.Context, key string) (err error) {
 	if !legalKey(key) {
 		err = errors.New("empty key")
 		return
@@ -91,6 +122,7 @@ func (r *Redis) Delete(key string) (err error) {
 
 	conn := r.Get()
 	defer conn.Close()
+
 	_, err = conn.Do("DEL", key)
 	return
 }

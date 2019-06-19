@@ -1,18 +1,30 @@
 package zlog
 
-import "testing"
+import (
+	"testing"
+)
 
 func init() {
 	InitLogger(&Config{
-		Debug: true,
-		Name:  "names",
+		Debug:      false,
+		Name:       "names",
+		WriteKafka: false,
 	})
 }
 
 func TestInfof(t *testing.T) {
-	Infof("print info (%s)", "test info")
+
+	Debug("debug消息")
+	Info("info消息")
+	Error("error消息")
+	//dd()
+
 }
 
 func TestErrorf(t *testing.T) {
 	Errorf("print error (%s)", "test error")
+}
+
+func dd() {
+	ApiErrorf("print error (%s)", "test error")
 }

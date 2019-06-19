@@ -305,8 +305,6 @@ func ApiErrorf(format string, args ...interface{}) {
 	forPC := runtime.FuncForPC(pc)
 	split := strings.Split(forPC.Name(), ".")
 
-	fmt.Println(forPC.Name())
-	
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Error(fmt.Sprintf(format, args...),
 			zap.String("class", split[len(split)-2]),

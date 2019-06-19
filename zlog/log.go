@@ -288,7 +288,7 @@ func Errorf(format string, args ...interface{}) {
 
 func ApiInfof(format string, args ...interface{}) {
 	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(2)
+	pc, _, _, _ := runtime.Caller(3)
 	forPC := runtime.FuncForPC(pc)
 	split := strings.Split(forPC.Name(), ".")
 
@@ -301,10 +301,12 @@ func ApiInfof(format string, args ...interface{}) {
 
 func ApiErrorf(format string, args ...interface{}) {
 	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(2)
+	pc, _, _, _ := runtime.Caller(3)
 	forPC := runtime.FuncForPC(pc)
 	split := strings.Split(forPC.Name(), ".")
 
+	fmt.Println(forPC.Name())
+	
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Error(fmt.Sprintf(format, args...),
 			zap.String("class", split[len(split)-2]),

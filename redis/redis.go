@@ -44,8 +44,46 @@ func New(c *Config) *Redis {
 	return &Redis{pool: pool}
 }
 
-func (r *Redis) Get() redis.Conn {
+func (r *Redis) GetConn() redis.Conn {
 	return r.pool.Get()
+}
+
+func (r *Redis) Get(ctx context.Context, key string) ([]byte, error) {
+	if !legalKey(key) {
+		return nil, ErrKey
+	}
+	conn := r.GetConn()
+	defer conn.Close()
+
+	return redis.Bytes(conn.Do("GET", key))
+}
+
+func (r *Redis) Set(ctx context.Context, key string, value interface{}, Exp int) (err error) {
+	if !legalKey(key) {
+		return ErrKey
+	}
+
+	conn := r.GetConn()
+	defer conn.Close()
+
+	var result string
+	switch value.(type) {
+	case string:
+		result = value.(string)
+	case []byte:
+		result = string(value.([]byte))
+	case interface{}:
+		var b []byte
+		b, err = json.Marshal(value)
+		result = string(b)
+		if err != nil {
+			return
+		}
+	}
+
+	_, err = conn.Do("SET", key, result, "EX", Exp)
+
+	return
 }
 
 func (r *Redis) CacheGet(ctx context.Context, key string) (reply *Reply) {
@@ -54,7 +92,7 @@ func (r *Redis) CacheGet(ctx context.Context, key string) (reply *Reply) {
 		reply.err = errors.New("empty key")
 		return
 	}
-	conn := r.Get()
+	conn := r.GetConn()
 	defer conn.Close()
 
 	reply2, err := redis.Bytes(conn.Do("GET", key))
@@ -69,7 +107,7 @@ func (r *Redis) CaCheSet(ctx context.Context, item *Item) (err error) {
 		return ErrKey
 	}
 
-	conn := r.Get()
+	conn := r.GetConn()
 	defer conn.Close()
 
 	if item.Value != nil {
@@ -86,10 +124,10 @@ func (r *Redis) CaCheSet(ctx context.Context, item *Item) (err error) {
 	case interface{}:
 		var b []byte
 		b, err = json.Marshal(item.Object)
-		value = string(b)
 		if err != nil {
 			return
 		}
+		value = string(b)
 	}
 
 	_, err = conn.Do("SET", item.Key, value, "EX", item.Expiration)
@@ -97,7 +135,7 @@ func (r *Redis) CaCheSet(ctx context.Context, item *Item) (err error) {
 }
 
 func (r *Redis) CacheGetMulti(ctx context.Context, keys []string) (res *Replies, err error) {
-	conn := r.Get()
+	conn := r.GetConn()
 	defer conn.Close()
 
 	res = new(Replies)
@@ -120,7 +158,7 @@ func (r *Redis) Delete(ctx context.Context, key string) (err error) {
 		return
 	}
 
-	conn := r.Get()
+	conn := r.GetConn()
 	defer conn.Close()
 
 	_, err = conn.Do("DEL", key)

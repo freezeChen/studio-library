@@ -31,7 +31,7 @@ type Item struct {
 	cas uint64
 }
 
-// Reply is the result of Get
+// Reply is the result of CacheGet
 type Reply struct {
 	err    error
 	item   *Item

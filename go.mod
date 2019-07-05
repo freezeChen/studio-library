@@ -9,7 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-xorm/core v0.6.0
 	github.com/go-xorm/xorm v0.7.1
-	github.com/micro/go-micro v1.6.0
+	github.com/micro/go-micro v1.7.0
 	github.com/ugorji/go v1.1.5-pre // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect

@@ -165,6 +165,27 @@ func (r *Redis) Delete(ctx context.Context, key string) (err error) {
 	return
 }
 
+func (r *Redis) Deletes(ctx context.Context, key string) (err error) {
+	conn := r.GetConn()
+	defer conn.Close()
+
+	keys, err := redis.Strings(conn.Do("KEYS", key+"*"))
+
+	if err != nil {
+		return err
+	}
+
+	for _, key := range keys {
+		_, err = redis.Bool(conn.Do("DEL", key))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}
+
 func legalKey(key string) bool {
 	if len(key) == 0 {
 		return false

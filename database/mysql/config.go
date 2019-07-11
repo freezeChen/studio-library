@@ -10,4 +10,5 @@ type Config struct {
 	Source string
 	Active int
 	Idle   int
+	Show   bool
 }

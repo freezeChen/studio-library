@@ -26,5 +26,6 @@ func New(c *Config) xorm.EngineInterface {
 	engine.SetMaxOpenConns(c.Active)
 	engine.SetMaxIdleConns(c.Idle)
 	engine.SetMapper(core.SameMapper{})
+	engine.ShowSQL(c.Show)
 	return engine
 }

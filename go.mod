@@ -6,21 +6,16 @@ require (
 	github.com/Shopify/sarama v1.22.1
 	github.com/garyburd/redigo v1.6.0
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.3.0
+	github.com/gin-gonic/gin v1.4.0
 	github.com/go-xorm/core v0.6.0
-	github.com/go-xorm/xorm v0.7.1
-	github.com/micro/go-micro v1.7.0
-	github.com/ugorji/go v1.1.5-pre // indirect
+	github.com/go-xorm/xorm v0.7.7
+	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/micro/go-micro v1.10.0
+	github.com/ugorji/go v1.1.7 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.9.1
-	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
-	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
+	go.uber.org/multierr v1.2.0 // indirect
+	go.uber.org/zap v1.10.0
+	golang.org/x/sys v0.0.0-20190927073244-c990c680b611 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-)
-
-replace (
-	github.com/golang/lint => github.com/golang/lint v0.0.0-20190227174305-8f45f776aaf1
-	github.com/testcontainers/testcontainer-go => github.com/testcontainers/testcontainers-go v0.0.0-20181115231424-8e868ca12c0f
-
+	xorm.io/builder v0.3.6 // indirect
 )

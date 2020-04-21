@@ -1,6 +1,7 @@
 package zlog
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -22,9 +23,16 @@ func TestInfof(t *testing.T) {
 }
 
 func TestErrorf(t *testing.T) {
-	Errorf("print error (%s)", "test error")
+
+
+	for i := 0; i<1000;i++{
+		fmt.Println(i)
+		Info("sdf")
+	}
+
+
 }
 
 func dd() {
-	ApiErrorf("print error (%s)", "test error")
+
 }

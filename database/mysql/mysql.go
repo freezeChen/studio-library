@@ -9,8 +9,8 @@ package mysql
 import (
 	"time"
 
-	"github.com/go-xorm/core"
-	"github.com/go-xorm/xorm"
+	"xorm.io/core"
+	"xorm.io/xorm"
 )
 
 var (

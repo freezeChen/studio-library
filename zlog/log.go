@@ -233,7 +233,7 @@ func Debugf(format string, args ...interface{}) {
 }
 
 func Info(msg string) {
-	defer logger.Sync()
+	//defer logger.Sync()
 	pc, _, _, _ := runtime.Caller(1)
 	forPC := runtime.FuncForPC(pc)
 	split := strings.Split(forPC.Name(), ".")
@@ -286,6 +286,36 @@ func Errorf(format string, args ...interface{}) {
 			zap.String("method", split[len(split)-1]),
 		)
 }
+
+func Warn(msg string)  {
+	defer logger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+
+	split := strings.Split(forPC.Name(), ".")
+
+	logger.WithOptions(zap.AddCallerSkip(1)).
+		Warn(
+			msg,
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
+func Warnf(format string, args ...interface{}) {
+	defer logger.Sync()
+	pc, _, _, _ := runtime.Caller(1)
+	forPC := runtime.FuncForPC(pc)
+	split := strings.Split(forPC.Name(), ".")
+
+	logger.WithOptions(zap.AddCallerSkip(1)).
+		Warn(fmt.Sprintf(format, args...),
+			zap.String("class", split[len(split)-2]),
+			zap.String("method", split[len(split)-1]),
+		)
+}
+
+
 
 func ApiInfof(param, format string, args ...interface{}) {
 	defer logger.Sync()

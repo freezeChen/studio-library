@@ -9,8 +9,8 @@ package conf
 import (
 	"os"
 
-	"github.com/micro/go-micro/config/source"
-	"github.com/micro/go-micro/config/source/file"
+	"github.com/micro/go-micro/v2/config/source"
+	"github.com/micro/go-micro/v2/config/source/file"
 )
 
 func LoadFileSource(path string) source.Source {

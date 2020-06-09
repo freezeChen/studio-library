@@ -39,8 +39,8 @@ func WithContext(ctx context.Context) *Group {
 // WithCancel create a new Group and an associated Context derived from ctx.
 //
 // given function from Go will receive context derived from this ctx,
-// The derived Context is canceled the first time a function passed to Go
-// returns a non-nil error or the first time Wait returns, whichever occurs
+// The derived Context is canceled the first xtime a function passed to Go
+// returns a non-nil error or the first xtime Wait returns, whichever occurs
 // first.
 func WithCancel(ctx context.Context) *Group {
 	ctx, cancel := context.WithCancel(ctx)

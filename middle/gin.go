@@ -6,7 +6,14 @@
 */
 package middle
 
-import "github.com/gin-gonic/gin"
+import (
+	"strings"
+	"time"
+
+	"github.com/freezeChen/studio-library/metadata"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
 
 func CORSMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
@@ -21,5 +28,13 @@ func CORSMiddleware() gin.HandlerFunc {
 		} else {
 			ctx.Next()
 		}
+	}
+}
+
+func GeneralMiddleware() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		ctx.Set(metadata.GinStartTime, time.Now())
+		ctx.Set(metadata.GinTraceId, strings.ReplaceAll(uuid.New().String(), "-", ""))
+		ctx.Next()
 	}
 }

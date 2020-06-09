@@ -1,6 +1,7 @@
 package zlog
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/freezeChen/studio-library/metadata"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -55,7 +57,7 @@ func InitLogger(c *Config) {
 	logger.setSyncers()
 
 	logger.zapConfig.EncoderConfig = zapcore.EncoderConfig{
-		TimeKey:        "time",
+		TimeKey:        "xtime",
 		LevelKey:       "level",
 		NameKey:        "app",
 		CallerKey:      "line",
@@ -119,9 +121,9 @@ func (l *Logger) loadCfg() {
 }
 
 func (l *Logger) setSyncers() {
-
+	var err error
 	if l.cfg.WriteKafka {
-		kafkaWS, err := initKafkaWriter(l.cfg)
+		kafkaWS, err = initKafkaWriter(l.cfg)
 		if err != nil {
 			panic("Failed to connect kafka:" + err.Error())
 		}
@@ -205,147 +207,106 @@ func (l *Logger) cores() zap.Option {
 	})
 }
 
-func Debug(msg string) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
-	logger.WithOptions(zap.AddCallerSkip(1)).
-		Debug(
-			msg,
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
-}
-
-func Debugf(format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
+func Debug(format string, args ...interface{}) {
+	class, method := funName(2)
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Debug(fmt.Sprintf(format, args...),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
+			zap.String("class", class),
+			zap.String("method", method),
 		)
 }
-
-func Info(msg string) {
-	//defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
+func Info(format string, args ...interface{}) {
+	class, method := funName(2)
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Info(
-			msg,
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
+			fmt.Sprintf(format, args...),
+			zap.String("class", class),
+			zap.String("method", method),
 		)
 }
-
-func Infof(format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
-	logger.WithOptions(zap.AddCallerSkip(1)).
-		Info(fmt.Sprintf(format, args...),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
-}
-
-func Error(msg string) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-
-	split := strings.Split(forPC.Name(), ".")
-
-	logger.WithOptions(zap.AddCallerSkip(1)).
-		Error(
-			msg,
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
-}
-
-func Errorf(format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
+func Error(format string, args ...interface{}) {
+	class, method := funName(2)
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Error(fmt.Sprintf(format, args...),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
+			zap.String("class", class),
+			zap.String("method", method),
 		)
 }
-
-func Warn(msg string)  {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-
-	split := strings.Split(forPC.Name(), ".")
-
-	logger.WithOptions(zap.AddCallerSkip(1)).
-		Warn(
-			msg,
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
-}
-
-func Warnf(format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(1)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
+func Warn(format string, args ...interface{}) {
+	class, method := funName(2)
 	logger.WithOptions(zap.AddCallerSkip(1)).
 		Warn(fmt.Sprintf(format, args...),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
+			zap.String("class", class),
+			zap.String("method", method),
 		)
 }
 
+func DebugV(ctx context.Context, args ...KV) {
+	if traceId, ok := ctx.Value(metadata.GinTraceId).(string); ok {
+		args = append(args, KVString(metadata.GinTraceId, traceId))
+	}
+	name, method := funName(2)
+	args = append(args, KVString("class", name), KVString("method", method))
 
-
-func ApiInfof(param, format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(3)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
+	fields := kv2Field(args)
 	logger.WithOptions(zap.AddCallerSkip(1)).
-		Info(fmt.Sprintf(format, args...),
-			zap.String("param", param),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
+		Debug("log",
+			fields...)
+
+}
+func InfoV(ctx context.Context, args ...KV) {
+	if traceId, ok := ctx.Value(metadata.GinTraceId).(string); ok {
+		args = append(args, KVString(metadata.GinTraceId, traceId))
+	}
+	name, method := funName(2)
+	args = append(args, KVString("class", name), KVString("method", method))
+
+	fields := kv2Field(args)
+	logger.WithOptions(zap.AddCallerSkip(1)).
+		Info("log",
+			fields...)
+
+}
+func WarnV(ctx context.Context, args ...KV) {
+	if traceId, ok := ctx.Value(metadata.GinTraceId).(string); ok {
+		args = append(args, KVString(metadata.GinTraceId, traceId))
+	}
+	name, method := funName(2)
+	args = append(args, KVString("class", name), KVString("method", method))
+
+	fields := kv2Field(args)
+	logger.WithOptions(zap.AddCallerSkip(1)).
+		Warn("log",
+			fields...)
+
+}
+func ErrorV(ctx context.Context, args ...KV) {
+	if traceId, ok := ctx.Value(metadata.GinTraceId).(string); ok {
+		args = append(args, KVString(metadata.GinTraceId, traceId))
+	}
+	name, method := funName(2)
+	args = append(args, KVString("class", name), KVString("method", method))
+	fields := kv2Field(args)
+	logger.WithOptions(zap.AddCallerSkip(1)).
+		Error("log",
+			fields...)
+
 }
 
-func ApiErrorf(param, format string, args ...interface{}) {
-	defer logger.Sync()
-	pc, _, _, _ := runtime.Caller(3)
-	forPC := runtime.FuncForPC(pc)
-	split := strings.Split(forPC.Name(), ".")
-
-	logger.WithOptions(zap.AddCallerSkip(3)).
-		Error(fmt.Sprintf(format, args...),
-			zap.String("param", param),
-			zap.String("class", split[len(split)-2]),
-			zap.String("method", split[len(split)-1]),
-		)
+func Sync() error {
+	return logger.Sync()
 }
 
 //日志时间格式化
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format(TIMEFORMAT))
+}
+
+func funName(skip int) (class, method string) {
+	caller, _, _, _ := runtime.Caller(skip)
+	forPC := runtime.FuncForPC(caller)
+	split := strings.Split(forPC.Name(), ".")
+	class = split[len(split)-2]
+	method = split[len(split)-1]
+	return
 }

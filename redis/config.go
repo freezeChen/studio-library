@@ -7,7 +7,7 @@
 package redis
 
 import (
-	"github.com/freezeChen/studio-library/time"
+	"github.com/freezeChen/studio-library/xtime"
 )
 
 type Config struct {
@@ -15,8 +15,8 @@ type Config struct {
 	Auth         string
 	Idle         int
 	Active       int
-	DialTimeout  time.Duration
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
-	IdleTimeout  time.Duration
+	DialTimeout  xtime.Duration
+	ReadTimeout  xtime.Duration
+	WriteTimeout xtime.Duration
+	IdleTimeout  xtime.Duration
 }

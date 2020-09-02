@@ -7,26 +7,25 @@
 package mysql
 
 import (
-	"time"
-
-	"xorm.io/core"
-	"xorm.io/xorm"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/plugin/prometheus"
 )
 
-var (
-	engine *xorm.Engine
-	err    error
-)
-
-func New(c *Config) xorm.EngineInterface {
-	engine, err = xorm.NewEngine("mysql", c.Source)
+func New(c *Config) *gorm.DB {
+	db, err := gorm.Open(mysql.Open(c.Source), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	engine.TZLocation = time.Local
-	engine.SetMaxOpenConns(c.Active)
-	engine.SetMaxIdleConns(c.Idle)
-	engine.SetMapper(core.SameMapper{})
-	engine.ShowSQL(c.Show)
-	return engine
+
+	db.Use(prometheus.New(prometheus.Config{
+		DBName:           "db1",
+		RefreshInterval:  0,
+		PushAddr:         "",
+		StartServer:      false,
+		HTTPServerPort:   0,
+		MetricsCollector: nil,
+	}))
+
+	return db
 }
